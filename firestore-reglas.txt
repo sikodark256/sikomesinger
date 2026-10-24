@@ -1,0 +1,27 @@
+# ============================================================
+# SIKODARK CHAT — Reglas de Firestore (solo la parte del chat)
+# Pegá estos dos bloques dentro del bloque match /databases/{database}/documents {
+# Si tus reglas ya están abiertas (allow read, write: if true), no hace falta.
+# ============================================================
+
+    match /chat_usuarios/{doc} {
+      allow read, write: if true;
+    }
+
+    match /chat_mensajes/{doc} {
+      allow read, write: if true;
+    }
+
+    // ─── SEÑALIZACIÓN WEBRTC (videollamadas/voz) ───
+    match /chat_signaling/{doc} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.tipo in ['offer','answer','ice']
+        && request.resource.data.de.size() <= 32
+        && request.resource.data.para.size() <= 32
+        && request.resource.data.ts is int;
+      allow delete: if request.auth != null
+        && (resource.data.de == request.auth.uid
+            || resource.data.para == request.auth.uid);
+      allow update: if false;
+    }
